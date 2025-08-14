@@ -1,0 +1,13 @@
+WITH CTE_LAG_CALC AS(
+
+SELECT product_id, sum(spend) AS current_year_spend, 
+EXTRACT(YEAR FROM transaction_date) AS year_,
+LAG(sum(spend)) OVER(PARTITION BY product_id ORDER BY EXTRACT(YEAR FROM transaction_date) ASC) as previous_year_spend 
+FROM user_transactions
+GROUP BY product_id, EXTRACT(YEAR FROM transaction_date)
+ORDER BY product_id, EXTRACT(YEAR FROM transaction_date)
+)
+SELECT year_, product_id, current_year_spend, previous_year_spend,
+ROUND(((current_year_spend-previous_year_spend)/previous_year_spend)*100.00, 2) AS yoy_rate
+FROM CTE_LAG_CALC
+;
