@@ -1,0 +1,19 @@
+WITH CTE_JOIN AS (
+SELECT ac.user_id, ac.activity_type, ac.time_spent,
+ab.age_bucket
+FROM activities AS ac
+INNER JOIN age_breakdown AS ab
+ON ac.user_id = ab.user_id
+),
+CTE_CALC AS (
+SELECT age_bucket,
+SUM(CASE WHEN activity_type = 'open' THEN time_spent ELSE 0 END) AS open_time,
+SUM(CASE WHEN activity_type = 'send' THEN time_spent ELSE 0 END) AS send_time
+FROM CTE_JOIN
+GROUP BY age_bucket
+)
+SELECT age_bucket,
+round(100.0 * send_time / (open_time + send_time), 2) AS send_perc,
+round(100.0 * open_time / (open_time + send_time), 2) AS open_perc
+FROM CTE_CALC
+LIMIT 10;
